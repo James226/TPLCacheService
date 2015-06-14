@@ -1,0 +1,56 @@
+#ignore Logica SMSC Sim stuff
+*.evt0
+*.dbg0
+
+#ignore thumbnails created by windows
+Thumbs.db
+#Ignore files build by Visual Studio
+*.obj
+*.exe
+*.pdb
+*.user
+*.aps
+*.pch
+*.vspscc
+*.vssscc
+*_i.c
+*_p.c
+*.ncb
+*.suo
+*.tlb
+*.tlh
+*.bak
+*.cache
+*.ilk
+*.log
+[Dd]ebug*/
+*.lib
+*.sbr
+obj/
+[Rr]elease*/
+_ReSharper*/
+*.Resharper
+[Tt]est[Rr]esult*/
+[Tt]est-[Rr]esult*/
+[Tt]emp/
+[Pp]rerelease/
+[Dd]eploy/
+[Ll]ogs/
+UpgradeLog*.XML
+_UpgradeReport_Files/
+
+#
+# Ignore bin files built to specific locations that don't have release or debug in the path
+bin/
+#
+# Ignore automatically generated AssemblyInfo files
+BaseAssemblyInfo.cs
+
+TestResult.xml
+packages/
+![Nn]u[Gg]et.exe
+artifacts/
+_build/
+Backup/
+*.eml
+

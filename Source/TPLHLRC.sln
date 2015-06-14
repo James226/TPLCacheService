@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPLHLRC", "TPLHLRC\TPLHLRC.csproj", "{3985371C-BE2D-464E-A8DA-B993178182D0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPLHLRC.Tests", "TPLHLRC.Tests\TPLHLRC.Tests.csproj", "{9112E4DE-76FD-4FF5-B8E6-FBF631F1C126}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3985371C-BE2D-464E-A8DA-B993178182D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3985371C-BE2D-464E-A8DA-B993178182D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3985371C-BE2D-464E-A8DA-B993178182D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3985371C-BE2D-464E-A8DA-B993178182D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9112E4DE-76FD-4FF5-B8E6-FBF631F1C126}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9112E4DE-76FD-4FF5-B8E6-FBF631F1C126}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9112E4DE-76FD-4FF5-B8E6-FBF631F1C126}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9112E4DE-76FD-4FF5-B8E6-FBF631F1C126}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
