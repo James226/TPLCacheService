@@ -24,8 +24,6 @@ namespace TPLHLRC
             Console.ReadLine();
 
             lookupService.Stop();
-
-            // TODO: Stop lookup service
             connection.Dispose();
             connectionMultiplexer.Dispose();
         }

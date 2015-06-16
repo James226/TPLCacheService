@@ -17,9 +17,9 @@ namespace TPLHLRC
 
         private EventingBasicConsumer _consumer;
 
-        public RabbitConsumerBlock(IPropagatorBlock<HLRLookupRequest, HLRLookupRequest> sourceBlock, IModel model)
+        public RabbitConsumerBlock(IModel model)
         {
-            _sourceBlock = sourceBlock;
+            _sourceBlock = new BroadcastBlock<HLRLookupRequest>(r => r);
             _model = model;
         }
 
@@ -39,6 +39,7 @@ namespace TPLHLRC
         public void Stop()
         {
             _model.BasicCancel(_consumer.ConsumerTag);
+            _sourceBlock.Complete();
         }
 
         public void ReleaseReservation(DataflowMessageHeader messageHeader, ITargetBlock<HLRLookupRequest> target)

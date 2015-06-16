@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks.Dataflow;
 using Moq;
@@ -12,15 +13,13 @@ namespace TPLHLRC.Tests
     [TestFixture]
     public class RabbitConsumerBlockStartTests
     {
-        private Mock<IPropagatorBlock<HLRLookupRequest, HLRLookupRequest>> _receiver;
         private Mock<IModel> _model;
 
         [SetUp]
         public void SetUp()
         {
-            _receiver = new Mock<IPropagatorBlock<HLRLookupRequest, HLRLookupRequest>>();
             _model = new Mock<IModel>();
-            var consumerBlock = new RabbitConsumerBlock(_receiver.Object, _model.Object);
+            var consumerBlock = new RabbitConsumerBlock(_model.Object);
             consumerBlock.Start();
         }
 
@@ -42,15 +41,13 @@ namespace TPLHLRC.Tests
     [TestFixture]
     public class RabbitConsumerBlockStopTests
     {
-        private Mock<IPropagatorBlock<HLRLookupRequest, HLRLookupRequest>> _receiver;
         private Mock<IModel> _model;
 
         [SetUp]
         public void SetUp()
         {
-            _receiver = new Mock<IPropagatorBlock<HLRLookupRequest, HLRLookupRequest>>();
             _model = new Mock<IModel>();
-            var consumerBlock = new RabbitConsumerBlock(_receiver.Object, _model.Object);
+            var consumerBlock = new RabbitConsumerBlock(_model.Object);
             consumerBlock.Start();
             consumerBlock.Stop();
         }
@@ -66,24 +63,23 @@ namespace TPLHLRC.Tests
     [TestFixture]
     public class RabbitConsumerBlockReceiveTests
     {
-        private Mock<IPropagatorBlock<HLRLookupRequest, HLRLookupRequest>> _sourceBlock;
         private Mock<IModel> _model;
         private IBasicConsumer _consumer;
         private HLRLookupRequest _request;
         private string _replyTo;
+        private RabbitConsumerBlock _consumerBlock;
 
         [SetUp]
         public void SetUp()
         {
             _replyTo = "1245";
-            _sourceBlock = new Mock<IPropagatorBlock<HLRLookupRequest, HLRLookupRequest>>();
             _model = new Mock<IModel>();
-            var consumerBlock = new RabbitConsumerBlock(_sourceBlock.Object, _model.Object);
+            _consumerBlock = new RabbitConsumerBlock(_model.Object);
 
             _model
                 .Setup(m => m.BasicConsume(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IBasicConsumer>()))
                 .Callback<string, bool, IBasicConsumer>((s, b, consumer) => _consumer = consumer);
-            consumerBlock.Start();
+            _consumerBlock.Start();
 
             _request = new HLRLookupRequest { MSISDN = "447987654321" };
             var encodedBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(_request));
@@ -99,9 +95,11 @@ namespace TPLHLRC.Tests
         [Test]
         public void ThenOfferMessageIsCalled()
         {
-            _sourceBlock
-                .Verify(b => b.OfferMessage(It.IsAny<DataflowMessageHeader>(), It.Is<HLRLookupRequest>(r => r.MSISDN == _request.MSISDN && r.ReplyTo == _replyTo),
-                    It.IsAny<ISourceBlock<HLRLookupRequest>>(), It.IsAny<bool>()));
+            var result = _consumerBlock.Receive(TimeSpan.FromMilliseconds(500));
+
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.MSISDN, Is.EqualTo(_request.MSISDN));
+            Assert.That(result.ReplyTo, Is.EqualTo(_replyTo));
         }
     }
 }

@@ -58,8 +58,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CacheLookupBlockTests.cs" />
     <Compile Include="RedisCacheServiceTests.cs" />
-    <Compile Include="DnsLookupService.cs" />
+    <Compile Include="DnsLookupServiceTests.cs" />
     <Compile Include="LookupServiceTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RabbitConsumerBlockTests.cs" />

@@ -2,10 +2,17 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StackExchange.Redis;
+using System.Threading.Tasks.Dataflow;
 
 namespace TPLHLRC
 {
-    public class RedisCacheService
+    public interface IRedisCacheService
+    {
+        HLRLookupResult Lookup(HLRLookupRequest request);
+        void Store(HLRLookupResult result);
+    }
+
+    public class RedisCacheService : IRedisCacheService
     {
         private readonly IDatabase _database;
 
@@ -27,6 +34,14 @@ namespace TPLHLRC
         public void Store(HLRLookupResult result)
         {
             _database.StringSet(result.Request.MSISDN, JsonConvert.SerializeObject(result.Properties));
+        }
+    }
+
+    public static class CacheLookupBlock
+    {
+        public static IPropagatorBlock<HLRLookupRequest, HLRLookupResult> Create(IRedisCacheService redisCacheService)
+        {
+            return new TransformBlock<HLRLookupRequest, HLRLookupResult>(r => redisCacheService.Lookup(r), new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = 20 });
         }
     }
 }
