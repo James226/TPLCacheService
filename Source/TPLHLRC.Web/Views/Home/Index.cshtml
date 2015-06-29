@@ -1,0 +1,50 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<style>
+ .box {
+     background-color: #eee;
+     padding: 10px;
+     border-radius: 10px;
+     margin: 10px;
+ }
+</style>
+
+<div class="row" ng-app="NumberLookup" ng-controller="HomeController">
+    <div class="col-md-4">
+        <div class="box">
+            <h2>Run Test</h2>
+            <fieldset>
+                <div class="form-group">
+                    <label>Lookups Per Second</label>
+                    <input type="number" class="form-control" ng-model="LookupsPerSecond" ng-enter="setRate()" />
+                </div>
+                <button type="submit" class="btn btn-success" ng-click="submit()" ng-show="!running">Start</button>
+                <button type="submit" class="btn btn-danger" ng-click="stop()" ng-show="running">Stop</button>
+            </fieldset>
+        </div>
+        <div class="box">
+            <h2>Cache Settings</h2>
+            <fieldset>
+                <div class="form-group">
+                    <label>DNS requests per second</label>
+                    <input type="number" class="form-control" ng-model="DnsRequestsPerSecond" ng-enter="setDnsRate()" />
+                </div>
+            </fieldset>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <h2>Status</h2>
+        <ul class="list-unstyled">
+            <li ng-repeat="rate in getRates()" style="display: inline-block; width: 100px; height: 50px; background: lightgray; border: 1px solid gray; margin: 5px;">{{ rate.Count }}</li>
+        </ul>
+    </div>
+</div>
+
+@section scripts {
+    @Scripts.Render("~/Scripts/jquery.signalR-2.2.0.js")
+    @Scripts.Render("~/Scripts/angular.js")
+    @Scripts.Render("~/Scripts/angular-signalr-hub.js")
+    @Scripts.Render("~/Scripts/app/app.js")
+}

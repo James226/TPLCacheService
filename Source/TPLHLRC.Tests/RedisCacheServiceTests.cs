@@ -24,7 +24,7 @@ namespace TPLHLRC.Tests
                 .Setup(r => r.StringGet(_request.MSISDN, CommandFlags.None))
                 .Returns(RedisValue.Null);
 
-            _result = redisCacheLookup.Lookup(_request);
+            _result = redisCacheLookup.Lookup(_request).Result;
         }
 
         [Test]
@@ -52,7 +52,7 @@ namespace TPLHLRC.Tests
                 .Setup(r => r.StringGet(_request.MSISDN, CommandFlags.None))
                 .Returns(JsonConvert.SerializeObject(new { MNC = 30, MCC = 234 }));
 
-            _result = redisCacheLookup.Lookup(_request);
+            _result = redisCacheLookup.Lookup(_request).Result;
         }
 
         [Test]

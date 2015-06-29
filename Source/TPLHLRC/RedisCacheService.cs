@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StackExchange.Redis;
@@ -8,7 +10,7 @@ namespace TPLHLRC
 {
     public interface IRedisCacheService
     {
-        HLRLookupResult Lookup(HLRLookupRequest request);
+        Task<HLRLookupResult> Lookup(HLRLookupRequest request);
         void Store(HLRLookupResult result);
     }
 
@@ -21,9 +23,17 @@ namespace TPLHLRC
             _database = database;
         }
 
-        public HLRLookupResult Lookup(HLRLookupRequest request)
+        public async Task<HLRLookupResult> Lookup(HLRLookupRequest request)
         {
-            var result = _database.StringGet(request.MSISDN);
+            RedisValue result;
+            try
+            {
+                result = await _database.StringGetAsync(request.MSISDN);
+            }
+            catch (Exception e)
+            {
+                return new HLRLookupResult {Request = request, CacheResult = CacheResult.Miss};
+            }
             if (!result.HasValue)
                 return new HLRLookupResult { Request = request, CacheResult = CacheResult.Miss };
 
@@ -33,15 +43,22 @@ namespace TPLHLRC
 
         public void Store(HLRLookupResult result)
         {
-            _database.StringSet(result.Request.MSISDN, JsonConvert.SerializeObject(result.Properties));
+            try
+            {
+                _database.StringSet(result.Request.MSISDN, JsonConvert.SerializeObject(result.Properties));
+            }
+            catch
+            {
+                // ignored
+            }
         }
     }
 
     public static class CacheLookupBlock
     {
-        public static IPropagatorBlock<HLRLookupRequest, HLRLookupResult> Create(IRedisCacheService redisCacheService)
+        public static IPropagatorBlock<HLRLookupRequest, HLRLookupResult> Create(IRedisCacheService redisCacheService, int maxDegreeOfParallelism)
         {
-            return new TransformBlock<HLRLookupRequest, HLRLookupResult>(r => redisCacheService.Lookup(r), new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = 20 });
+            return new TransformBlock<HLRLookupRequest, HLRLookupResult>(r => redisCacheService.Lookup(r), new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism });
         }
     }
 }

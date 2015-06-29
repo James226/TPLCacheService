@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -8,13 +9,21 @@ using RabbitMQ.Client;
 
 namespace TPLHLRC
 {
+    public class Block
+    {
+        public IDisposable[] Links;
+    }
+
     public class LookupService
     {
+        public readonly Dictionary<string, Block> Blocks = new Dictionary<string, Block>();
+
         private readonly IModel _rabbitModel;
         private readonly IRedisCacheService _redisCacheService;
         private readonly IDnsLookupService _dnsLookupService;
         private RabbitConsumerBlock _lookupRequestProvider;
         private Task _completionTask;
+        private ITokenBucket _bucket;
 
         public LookupService(IModel rabbitModel,
             IRedisCacheService redisCacheService,
@@ -28,29 +37,27 @@ namespace TPLHLRC
         public void Start()
         {
             _lookupRequestProvider = new RabbitConsumerBlock(_rabbitModel);
-            var cacheLookupBlock = CacheLookupBlock.Create(_redisCacheService);
-
+            var cacheLookupBlock = CacheLookupBlock.Create(_redisCacheService, 40);
             var dnsLookupBlock = new TransformBlock<HLRLookupResult,HLRLookupResult>(r => _dnsLookupService.Lookup(r.Request));
-            var cacheStoreBlock = new ActionBlock<HLRLookupResult>(r => _redisCacheService.Store(r));
+            var cacheStoreBlock = new ActionBlock<HLRLookupResult>(r => _redisCacheService.Store(r), new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = 50 });
             var logBlock = new ActionBlock<HLRLookupResult>(r => Console.WriteLine("Response to request MSISDN: {0}, MNC:{1}, MCC:{2}", r.Request.MSISDN, r.Properties["MNC"], r.Properties["MCC"]));
             var responseBlock = new ActionBlock<HLRLookupResult>(r => SendResponse(r));
             _completionTask = responseBlock.Completion;
-
-            var bucket = TokenBuckets.Construct()
+          
+            _bucket = TokenBuckets.Construct()
                 .WithCapacity(1)
-                .WithFixedIntervalRefillStrategy(1, TimeSpan.FromSeconds(20))
+                .WithFixedIntervalRefillStrategy(1, TimeSpan.FromSeconds(1/500.0))
                 .Build();
 
             var rateLimiterBlock = new TransformBlock<HLRLookupResult, HLRLookupResult>(r =>
             {
-                bucket.Consume();
+                _bucket.Consume();
                 return r;
             });
 
             _lookupRequestProvider.LinkTo(cacheLookupBlock, new DataflowLinkOptions { PropagateCompletion = true });
 
             rateLimiterBlock.LinkTo(dnsLookupBlock, new DataflowLinkOptions { PropagateCompletion = true });
-
             cacheLookupBlock.LinkTo(responseBlock, r => r.CacheResult == CacheResult.Hit);
             cacheLookupBlock.LinkTo(rateLimiterBlock, new DataflowLinkOptions { PropagateCompletion = true }, r => r.CacheResult == CacheResult.Miss);
 
@@ -72,7 +79,7 @@ namespace TPLHLRC
         {
             var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(result.Properties));
             var properties = _rabbitModel.CreateBasicProperties();
-            properties.CorrelationId = result.Request.MSISDN;
+            properties.CorrelationId = result.Request.CorrelationId;
             _rabbitModel.BasicPublish(string.Empty, result.Request.ReplyTo, properties, bytes);
         }
 
@@ -80,6 +87,14 @@ namespace TPLHLRC
         {
             _lookupRequestProvider.Stop();
             _completionTask.Wait();
+        }
+
+        public void SetDnsRateLimit(int rateLimit)
+        {
+            _bucket = TokenBuckets.Construct()
+                .WithCapacity(1)
+                .WithFixedIntervalRefillStrategy(1, TimeSpan.FromSeconds(1 / (double)rateLimit))
+                .Build();
         }
     }
 }

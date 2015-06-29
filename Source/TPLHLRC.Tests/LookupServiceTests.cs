@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using Moq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -34,7 +35,7 @@ namespace TPLHLRC.Tests
             _request = new HLRLookupRequest { MSISDN = "447987654321", ReplyTo = _replyTo };
             _cacheLookupService
                 .Setup(s => s.Lookup(It.IsAny<HLRLookupRequest>()))
-                .Returns(new HLRLookupResult
+                .Returns(Task.FromResult(new HLRLookupResult
                 {
                     Request = _request,
                     CacheResult = CacheResult.Hit,
@@ -43,7 +44,7 @@ namespace TPLHLRC.Tests
                         {"MNC", "20"},
                         {"MCC", "234"}
                     }
-                });
+                }));
             _dnsLookupService = new Mock<IDnsLookupService>();
             var lookupCache = new LookupService(_model.Object, _cacheLookupService.Object, _dnsLookupService.Object);
 
@@ -119,11 +120,11 @@ namespace TPLHLRC.Tests
             _request = new HLRLookupRequest { MSISDN = "447987654321", ReplyTo = _replyTo };
             _cacheLookupService
                 .Setup(s => s.Lookup(It.IsAny<HLRLookupRequest>()))
-                .Returns(new HLRLookupResult
+                .Returns(Task.FromResult(new HLRLookupResult
                 {
                     Request = _request,
                     CacheResult = CacheResult.Miss
-                });
+                }));
 
             _dnsLookupService = new Mock<IDnsLookupService>();
             _result = new HLRLookupResult

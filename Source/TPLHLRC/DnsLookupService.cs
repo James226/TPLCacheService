@@ -10,16 +10,17 @@ namespace TPLHLRC
 
     public class DnsLookupService : IDnsLookupService
     {
+        private static readonly Random Random = new Random();
+
         public HLRLookupResult Lookup(HLRLookupRequest request)
         {
-            var random = new Random();
             return new HLRLookupResult
             {
                 Request = request,
                 CacheResult = CacheResult.Miss,
                 Properties = new Dictionary<string, string> {  
-                    { "MNC", random.Next(0, 99).ToString("D2") },
-                    { "MCC", random.Next(0, 999).ToString("D3") }
+                    { "MNC", Random.Next(0, 99).ToString("D2") },
+                    { "MCC", Random.Next(0, 999).ToString("D3") }
                 }
             };
         }

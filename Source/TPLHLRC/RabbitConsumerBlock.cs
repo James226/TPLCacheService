@@ -30,10 +30,11 @@ namespace TPLHLRC
             {
                 var request = JsonConvert.DeserializeObject<HLRLookupRequest>(Encoding.UTF8.GetString(args.Body));
                 request.ReplyTo = args.BasicProperties.ReplyTo;
+                request.CorrelationId = args.BasicProperties.CorrelationId;
                 _sourceBlock.Post(request);
             };
             _model.QueueDeclare("HLRLookup", false, false, true, new Dictionary<string, object>());
-            _model.BasicConsume("HLRLookup", false, _consumer);
+            _model.BasicConsume("HLRLookup", true, _consumer);
         }
 
         public void Stop()

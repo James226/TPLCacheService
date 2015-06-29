@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Owin.Hosting;
 using RabbitMQ.Client;
 using StackExchange.Redis;
 
@@ -6,6 +7,7 @@ namespace TPLHLRC
 {
     static class Program
     {
+        public static LookupService LookupService;
         static void Main(string[] args)
         {
             var connectionMultiplexer = ConnectionMultiplexer.Connect("localhost:6379");
@@ -16,14 +18,20 @@ namespace TPLHLRC
             
             var redisCacheLookup = new RedisCacheService(database);
 
-            var lookupService = new LookupService(connection.CreateModel(),
+            LookupService = new LookupService(connection.CreateModel(),
                 redisCacheLookup,
                 new DnsLookupService());
 
-            lookupService.Start();
-            Console.ReadLine();
+            const string baseAddress = "http://localhost:9000/"; 
 
-            lookupService.Stop();
+            // Start OWIN host 
+            using (WebApp.Start<Startup>(baseAddress))
+            {
+                LookupService.Start();
+                Console.ReadLine();
+            }
+
+            LookupService.Stop();
             connection.Dispose();
             connectionMultiplexer.Dispose();
         }
